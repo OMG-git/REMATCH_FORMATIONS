@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
+<html lang="en"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5v5 サッカーフォーメーション</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>REMATCH Formations (p5.js)</title> <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
     <style>
         :root {
             --body-bg: #f0f4f8;
@@ -12,23 +11,21 @@
             --instructions-bg: white;
             --instructions-text-color: #555;
             --instructions-heading-color: #333;
-            --field-bg: #4CAF50;
-            --field-border-color: #FFF;
-            --line-color: #FFF;
-            --goal-bg: #DDD;
-            --goal-border: #AAA;
-            --player-red-bg: #EF4444;
-            --player-blue-bg: #3B82F6;
-            --player-red-gk-bg: #DC2626;
-            --player-blue-gk-bg: #1D4ED8;
-            --gk-border-color: #FDE047;
-            --ball-bg: #FFFFFF;
-            --ball-border: #000000;
+            --field-bg-p5: [60, 179, 113]; 
+            --field-line-color-p5: [255, 255, 255, 180]; 
+            --player-red-fill-p5: [239, 68, 68];
+            --player-blue-fill-p5: [59, 130, 246];
+            --player-red-gk-fill-p5: [220, 38, 38];
+            --player-blue-gk-fill-p5: [29, 78, 216];
+            --gk-stroke-color-p5: [253, 224, 71]; 
+            --ball-fill-p5: [255, 255, 255];
+            --ball-stroke-p5: [0, 0, 0];
+            --drawing-stroke-p5: [0, 0, 0];
+            --text-color-p5: [255,255,255]; 
             --button-bg: #e5e7eb;
             --button-text: #1f2937;
             --button-hover-bg: #d1d5db;
-            --button-active-bg: #9ca3af; /* Tailwind gray-400 */
-            --drawing-color: #000000;
+            --button-active-bg: #9ca3af;
         }
 
         body.dark-mode {
@@ -37,22 +34,20 @@
             --instructions-bg: #1f2937;
             --instructions-text-color: #d1d5db;
             --instructions-heading-color: #e5e7eb;
-            --field-bg: #388E3C;
-            --field-border-color: #4b5563;
-            --line-color: #9ca3af;
-            --goal-bg: #4b5563;
-            --goal-border: #6b7280;
-            --player-red-bg: #B91C1C;
-            --player-blue-bg: #1E40AF;
-            --player-red-gk-bg: #991B1B;
-            --player-blue-gk-bg: #1E3A8A;
-            --ball-bg: #e5e7eb;
-            --ball-border: #9ca3af;
+            --field-bg-p5-dark: [34, 90, 60]; 
+            --field-line-color-p5-dark: [156, 163, 175, 180]; 
+            --player-red-fill-p5-dark: [185, 28, 28];
+            --player-blue-fill-p5-dark: [30, 64, 175];
+            --player-red-gk-fill-p5-dark: [153, 27, 27];
+            --player-blue-gk-fill-p5-dark: [30, 58, 138];
+            --ball-fill-p5-dark: [229, 231, 235];
+            --ball-stroke-p5-dark: [156, 163, 175];
+            --drawing-stroke-p5-dark: [255, 255, 255];
+            --text-color-p5-dark: [229, 231, 235]; 
             --button-bg: #374151;
             --button-text: #f3f4f6;
             --button-hover-bg: #4b5563;
-            --button-active-bg: #6b7280; /* Tailwind gray-500 */
-            --drawing-color: #FFFFFF;
+            --button-active-bg: #6b7280;
         }
 
         body {
@@ -69,54 +64,20 @@
             box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
         }
-        .soccer-field {
-            position: relative;
+        #canvasContainer {
             width: 700px;
             height: 450px;
-            background-color: var(--field-bg);
-            border: 2px solid var(--field-border-color);
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             border-radius: 8px;
-            overflow: hidden;
-            transition: background-color 0.3s, border-color 0.3s;
+            overflow: hidden; 
+            border: 2px solid var(--button-hover-bg); 
         }
-        .drawing-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%; /* JS sets pixel size */
-            height: 100%; /* JS sets pixel size */
-            z-index: 4; /* Below ball (5) and players (10) */
-            /* pointer-events will be toggled by JS */
+        canvas { 
+            display: block; 
+            border-radius: 6px; 
         }
-        .line { position: absolute; background-color: var(--line-color); opacity: 0.7; transition: background-color 0.3s; }
-        .center-line { width: 2px; height: 100%; left: 50%; top: 0; transform: translateX(-50%); }
-        .center-circle { width: 90px; height: 90px; border: 2px solid var(--line-color); opacity: 0.7; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); transition: border-color 0.3s;}
-        .center-spot { width: 5px; height: 5px; background-color: var(--line-color); border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); transition: background-color 0.3s;}
-        
-        .penalty-area { position: absolute; width: 81px; height: 308px; border: 2px solid var(--line-color); opacity: 0.7; top: 50%; transform: translateY(-50%); transition: border-color 0.3s; }
-        .penalty-area.left { left: 0; }
-        .penalty-area.right { right: 0; }
 
-        .goal-area { position: absolute; width: 27px; height: 140px; border: 2px solid var(--line-color); opacity: 0.7; top: 50%; transform: translateY(-50%); transition: border-color 0.3s; }
-        .goal-area.left { left: 0; }
-        .goal-area.right { right: 0; }
-
-        .goal { position: absolute; width: 10px; height: 90px; background-color: var(--goal-bg); border: 2px solid var(--goal-border); top: 50%; transform: translateY(-50%); z-index: 0; transition: background-color 0.3s, border-color 0.3s; }
-        .goal.left { left: -10px; } 
-        .goal.right { right: -10px; }
-
-        .player { position: absolute; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 12px; cursor: grab; user-select: none; border: 2px solid rgba(0,0,0,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; }
-        .player.dragging { cursor: grabbing; z-index: 100; opacity: 0.8; }
-        .player.red { background-color: var(--player-red-bg); }
-        .player.blue { background-color: var(--player-blue-bg); }
-        .player.red.goalkeeper { background-color: var(--player-red-gk-bg); border: 3px solid var(--gk-border-color); box-shadow: 0 0 10px var(--gk-border-color); }
-        .player.blue.goalkeeper { background-color: var(--player-blue-gk-bg); border: 3px solid var(--gk-border-color); box-shadow: 0 0 10px var(--gk-border-color); }
-
-        .ball { position: absolute; width: 22px; height: 22px; background-color: var(--ball-bg); border: 2px solid var(--ball-border); border-radius: 50%; cursor: grab; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: background-color 0.3s, border-color 0.3s; }
-        .ball.dragging { cursor: grabbing; z-index: 99; opacity: 0.8; }
-
-        .controls { margin-top: 15px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .controls { margin-top: 15px; margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
         .controls button { padding: 8px 12px; background-color: var(--button-bg); color: var(--button-text); border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: background-color 0.2s; }
         .controls button:hover { background-color: var(--button-hover-bg); }
         .controls button.active { background-color: var(--button-active-bg); font-weight: bold; }
@@ -129,311 +90,555 @@
 </head>
 <body>
     <div class="controls">
-        <button id="darkModeToggle">ライト/ダーク</button>
-        <button id="dragModeButton" class="drawing-mode-button">ドラッグ</button>
-        <button id="arrowModeButton" class="drawing-mode-button">矢印</button>
-        <button id="paintModeButton" class="drawing-mode-button">ペイント</button>
-        <button id="clearDrawingButton">クリア描画</button>
+        <button id="languageToggle">EN/JA</button>
+        <button id="darkModeToggle">Light/Dark</button>
+        <button id="dragModeButton" class="mode-button">Drag</button>
+        <button id="arrowModeButton" class="mode-button">Arrow</button>
+        <button id="paintModeButton" class="mode-button">Paint</button>
+        <button id="animateModeButton" class="mode-button">Animate</button>
+        <button id="clearDrawingButton">Clear Drawings</button>
     </div>
-    <div class="soccer-field" id="soccerField">
-        <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
-        <div class="line center-line"></div>
-        <div class="line center-circle"></div>
-        <div class="line center-spot"></div>
-        <div class="penalty-area left" id="redPenaltyArea"></div>
-        <div class="penalty-area right" id="bluePenaltyArea"></div>
-        <div class="goal-area left"></div>
-        <div class="goal-area right"></div>
-        <div class="goal left"></div>
-        <div class="goal right"></div>
-        <div id="ball" class="ball"></div>
-        </div>
+    <div id="canvasContainer"></div> 
+    
     <div class="instructions">
-        <h3>操作方法とルール</h3>
-        <p>各プレイヤー（円）とボール（白い円）をマウスでドラッグして、フィールド上の好きな位置に配置できます。「ドラッグ」モードを選択してください。</p>
-        <p>「矢印」または「ペイント」モードを選択すると、フィールドに書き込みができます。「クリア描画」で書き込みを消せます。</p>
-        <ul>
-            <li><strong>ゴールキーパー (GK):</strong> 黄色い枠で強調表示されているプレイヤーがGKです。</li>
-            <li>自陣ペナルティエリア内に味方プレイヤーが1人だけいる場合、そのプレイヤーがGKになります。</li>
-            <li>GKがペナルティエリアから出るとGKではなくなります。</li>
-            <li>ペナルティエリア内に味方プレイヤーが複数いる場合、その中の1人のみがGKとして扱われます。</li>
-            <li>現在のGKがペナルティエリアから出て、エリア内に他の味方プレイヤーが残っている場合、残っているプレイヤーの中からランダムに1人が新しいGKになります。</li>
+        <h3 id="instructionsTitle">How to Use & Rules</h3>
+        <p id="instructionsDragMode"><strong>Drag Mode:</strong> Drag players or the ball to position them.</p>
+        <p id="instructionsArrowMode"><strong>Arrow Mode:</strong> Drag to draw arrows.</p>
+        <p id="instructionsPaintMode"><strong>Paint Mode:</strong> Drag to draw freehand lines.</p>
+        <p id="instructionsAnimateModeTitle"><strong>Animate Mode:</strong></p>
+        <ol style="list-style-type: decimal; padding-left: 20px; margin-left:0;" id="instructionsAnimateModeSteps">
+            <li id="instructionsAnimateStep1">Click a player or the ball to select it (highlighted yellow).</li>
+            <li id="instructionsAnimateStep2">Then, click a target location on the field to move the selected item.</li>
+        </ol>
+        <p id="instructionsClearDrawing">"Clear Drawings" will erase all arrows and paint.</p>
+        <ul id="instructionsGKSection">
+            <li id="instructionsGKHighlight"><strong>Goalkeeper (GK):</strong> Displayed in a special color (e.g., darker red for Red team).</li>
+            <li id="instructionsGKLogic">GK rules apply as before (auto-determined by position in own penalty area).</li>
         </ul>
     </div>
 
     <script>
-        const field = document.getElementById('soccerField');
-        let fieldRect = field.getBoundingClientRect();
+        const CANVAS_WIDTH = 700;
+        const CANVAS_HEIGHT = 450;
+        const PLAYER_RADIUS = 14; 
+        const BALL_RADIUS = 11;   
+        const ANIMATION_SPEED = 3;
 
-        const PLAYER_SIZE = 28;
-        const BALL_SIZE = 22;
-        const playersData = []; 
-        let ballData = {};
+        let players = [];
+        let ball;
+        
+        let currentMode = 'drag'; 
+        let currentLanguage = 'en'; // Default language
+        let draggedItem = null;
+        let itemToAnimate = null;
 
-        const drawingCanvas = document.getElementById('drawingCanvas');
-        const ctx = drawingCanvas.getContext('2d');
-        let currentDrawingMode = 'drag'; // 'drag', 'arrow', 'paint'
-        let isDrawing = false;
-        let lastX, lastY; // For paint mode
-        let arrowStartX, arrowStartY; // For arrow mode
+        let drawnArrows = [];
+        let currentPaintPath = [];
+        let allPaintPaths = [];
+        let arrowStartPos = null;
 
-        const redPenaltyAreaRect = { x1: 0, y1: (fieldRect.height - 308) / 2, x2: 81, y2: (fieldRect.height - 308) / 2 + 308 };
-        const bluePenaltyAreaRect = { x1: fieldRect.width - 81, y1: (fieldRect.height - 308) / 2, x2: fieldRect.width, y2: (fieldRect.height - 308) / 2 + 308 };
+        const PA_WIDTH = 81;
+        const PA_HEIGHT = 308;
+        const redPenaltyArea = { x1: 0, y1: (CANVAS_HEIGHT - PA_HEIGHT) / 2, x2: PA_WIDTH, y2: (CANVAS_HEIGHT - PA_HEIGHT) / 2 + PA_HEIGHT };
+        const bluePenaltyArea = { x1: CANVAS_WIDTH - PA_WIDTH, y1: (CANVAS_HEIGHT - PA_HEIGHT) / 2, x2: CANVAS_WIDTH, y2: (CANVAS_HEIGHT - PA_HEIGHT) / 2 + PA_HEIGHT };
 
-        // --- Canvas Setup ---
-        function setupDrawingCanvas() {
-            fieldRect = field.getBoundingClientRect(); 
-            drawingCanvas.width = fieldRect.width;
-            drawingCanvas.height = fieldRect.height;
+        const langData = {
+            en: {
+                title: "5v5 Soccer Formation (p5.js)",
+                darkModeToggle: "Light/Dark",
+                dragModeButton: "Drag",
+                arrowModeButton: "Arrow",
+                paintModeButton: "Paint",
+                animateModeButton: "Animate",
+                clearDrawingButton: "Clear Drawings",
+                instructionsTitle: "How to Use & Rules",
+                instructionsDragMode: "<strong>Drag Mode:</strong> Drag players or the ball to position them.",
+                instructionsArrowMode: "<strong>Arrow Mode:</strong> Drag to draw arrows.",
+                instructionsPaintMode: "<strong>Paint Mode:</strong> Drag to draw freehand lines.",
+                instructionsAnimateModeTitle: "<strong>Animate Mode:</strong>",
+                instructionsAnimateStep1: "Click a player or the ball to select it (highlighted yellow).",
+                instructionsAnimateStep2: "Then, click a target location on the field to move the selected item.",
+                instructionsClearDrawing: "\"Clear Drawings\" will erase all arrows and paint.",
+                instructionsGKHighlight: "<strong>Goalkeeper (GK):</strong> Displayed in a special color (e.g., darker red for Red team).",
+                instructionsGKLogic: "GK rules apply as before (auto-determined by position in own penalty area)."
+            },
+            ja: {
+                title: "5v5 サッカーフォーメーション (p5.js)",
+                darkModeToggle: "ライト/ダーク",
+                dragModeButton: "ドラッグ",
+                arrowModeButton: "矢印",
+                paintModeButton: "ペイント",
+                animateModeButton: "アニメーション",
+                clearDrawingButton: "クリア描画",
+                instructionsTitle: "操作方法とルール",
+                instructionsDragMode: "<strong>ドラッグモード:</strong> プレイヤーやボールをドラッグして配置します。",
+                instructionsArrowMode: "<strong>矢印モード:</strong> ドラッグして矢印を描画します。",
+                instructionsPaintMode: "<strong>ペイントモード:</strong> ドラッグしてフリーハンド線を描画します。",
+                instructionsAnimateModeTitle: "<strong>アニメーションモード:</strong>",
+                instructionsAnimateStep1: "アニメーションさせたいプレイヤーかボールをクリックして選択します（黄色い枠で表示）。",
+                instructionsAnimateStep2: "次にフィールド上の目標地点をクリックすると、選択したアイテムがそこへ移動します。",
+                instructionsClearDrawing: "「クリア描画」で矢印やペイントを消せます。",
+                instructionsGKHighlight: "<strong>ゴールキーパー (GK):</strong> 特別な色で表示されます（例: 赤チームなら濃い赤）。",
+                instructionsGKLogic: "GKルールは従来通りです（自陣ペナルティエリア内の状況で自動的に決定）。"
+            }
+        };
+
+        function getThemeColor(baseNameForP5) {
+            // ... (previous getThemeColor function remains the same)
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const style = getComputedStyle(document.documentElement);
+            let colorArray = null;
+            const p5VarSuffix = '-p5'; 
+
+            if (isDarkMode) {
+                const darkVarName = `--${baseNameForP5}${p5VarSuffix}-dark`; 
+                const darkColorStr = style.getPropertyValue(darkVarName);
+                if (darkColorStr && darkColorStr.trim() !== '') {
+                    try {
+                        colorArray = JSON.parse(darkColorStr.trim());
+                    } catch (e) {
+                        console.error(`Error parsing dark mode color string for ${darkVarName}: '${darkColorStr}'`, e);
+                    }
+                }
+            }
+
+            if (!colorArray) {
+                const baseVarName = `--${baseNameForP5}${p5VarSuffix}`; 
+                const baseColorStr = style.getPropertyValue(baseVarName);
+                if (baseColorStr && baseColorStr.trim() !== '') {
+                    try {
+                        colorArray = JSON.parse(baseColorStr.trim());
+                    } catch (e) {
+                        console.error(`Error parsing base color string for ${baseVarName}: '${baseColorStr}'`, e);
+                    }
+                }
+            }
             
-            const isDark = document.body.classList.contains('dark-mode');
-            ctx.strokeStyle = isDark ? getComputedStyle(document.documentElement).getPropertyValue('--drawing-color').trim() : '#000000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
+            if (colorArray) {
+                return colorArray;
+            }
+            
+            // Fallback colors if CSS variables are not found or invalid
+            if (baseNameForP5.includes('line') || baseNameForP5.includes('stroke') || baseNameForP5.includes('border')) {
+                return isDarkMode ? [220, 220, 220] : [50, 50, 50]; 
+            } else if (baseNameForP5.includes('text')) {
+                return isDarkMode ? [230, 230, 230] : [20, 20, 20]; 
+            } else { 
+                if (baseNameForP5.includes('field-bg')) {
+                    return isDarkMode ? [20, 20, 20] : [230, 230, 230]; 
+                }
+                return isDarkMode ? [200, 200, 200] : [100, 100, 100]; 
+            }
         }
 
-        // --- Drawing Mode Logic ---
-        const drawingModeButtons = document.querySelectorAll('.drawing-mode-button');
-        
-        function setDrawingMode(mode) {
-            currentDrawingMode = mode;
-            isDrawing = false; 
 
-            drawingModeButtons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.id === `${mode}ModeButton`) {
-                    btn.classList.add('active');
-                }
+        function setup() {
+            const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+            canvas.parent('canvasContainer');
+            initializePlayersAndBall();
+            
+            // Load language preference
+            const savedLang = localStorage.getItem('soccerLangPref_p5');
+            if (savedLang && langData[savedLang]) {
+                currentLanguage = savedLang;
+            }
+            updateUIText(); // Apply loaded or default language
+            updateModeButtons();
+
+            textAlign(CENTER, CENTER);
+            textSize(12);
+            strokeJoin(ROUND); 
+        }
+
+        function draw() {
+            background(getThemeColor('field-bg'));
+            drawFieldLines();
+            
+            allPaintPaths.forEach(path => {
+                stroke(getThemeColor('drawing-stroke'));
+                strokeWeight(2);
+                noFill();
+                beginShape();
+                path.forEach(p => vertex(p.x, p.y));
+                endShape();
+            });
+            drawnArrows.forEach(arrow => {
+                stroke(getThemeColor('drawing-stroke'));
+                strokeWeight(2);
+                drawArrow(arrow.fromX, arrow.fromY, arrow.toX, arrow.toY);
             });
 
-            if (mode === 'drag') {
-                drawingCanvas.style.pointerEvents = 'none';
+            if (currentMode === 'paint' && currentPaintPath.length > 1 && mouseIsPressed) {
+                stroke(getThemeColor('drawing-stroke'));
+                strokeWeight(2);
+                noFill();
+                beginShape();
+                currentPaintPath.forEach(p => vertex(p.x, p.y));
+                endShape();
+            }
+            if (currentMode === 'arrow' && arrowStartPos && mouseIsPressed) {
+                stroke(getThemeColor('drawing-stroke'));
+                strokeWeight(2);
+                line(arrowStartPos.x, arrowStartPos.y, mouseX, mouseY);
+            }
+
+            players.forEach(p => {
+                if (p.isAnimating) {
+                    animateItem(p);
+                }
+                p.display();
+            });
+
+            if (ball.isAnimating) {
+                animateItem(ball);
+            }
+            ball.display();
+        }
+
+        function initializePlayersAndBall() {
+            // ... (player and ball initialization remains the same)
+            players = []; 
+            // Red Team
+            players.push(new Player('r1', 'red', 50, CANVAS_HEIGHT / 2, 1));
+            players.push(new Player('r2', 'red', 120, CANVAS_HEIGHT / 3, 2));
+            players.push(new Player('r3', 'red', 120, CANVAS_HEIGHT * 2 / 3, 3));
+            players.push(new Player('r4', 'red', 200, CANVAS_HEIGHT / 3 + PLAYER_RADIUS / 2, 4));
+            players.push(new Player('r5', 'red', 200, CANVAS_HEIGHT * 2 / 3 - PLAYER_RADIUS / 2, 5));
+            // Blue Team
+            players.push(new Player('b1', 'blue', CANVAS_WIDTH - 50, CANVAS_HEIGHT / 2, 1));
+            players.push(new Player('b2', 'blue', CANVAS_WIDTH - 120, CANVAS_HEIGHT / 3, 2));
+            players.push(new Player('b3', 'blue', CANVAS_WIDTH - 120, CANVAS_HEIGHT * 2 / 3, 3));
+            players.push(new Player('b4', 'blue', CANVAS_WIDTH - 200, CANVAS_HEIGHT / 3 + PLAYER_RADIUS / 2, 4));
+            players.push(new Player('b5', 'blue', CANVAS_WIDTH - 200, CANVAS_HEIGHT * 2 / 3 - PLAYER_RADIUS / 2, 5));
+            
+            ball = new Ball(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+            updateAllGoalkeepers();
+        }
+        
+        class Item {
+            // ... (Item class remains the same)
+            constructor(x, y, radius) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.targetX = x;
+                this.targetY = y;
+                this.isAnimating = false;
+                this.speed = ANIMATION_SPEED;
+                this.isSelectedForAnimation = false;
+            }
+
+            isMouseOver() {
+                return dist(mouseX, mouseY, this.x, this.y) < this.radius;
+            }
+        }
+
+        class Player extends Item {
+            // ... (Player class remains the same)
+            constructor(id, team, x, y, number) {
+                super(x, y, PLAYER_RADIUS);
+                this.id = id;
+                this.team = team;
+                this.number = number;
+                this.isGK = false;
+            }
+
+            display() {
+                let fillColorName = this.team === 'red' ? 'player-red-fill' : 'player-blue-fill';
+                if (this.isGK) {
+                    fillColorName = this.team === 'red' ? 'player-red-gk-fill' : 'player-blue-gk-fill';
+                }
+                
+                noStroke();
+                fill(getThemeColor(fillColorName));
+                ellipse(this.x, this.y, this.radius * 2, this.radius * 2);
+
+                if (this.isSelectedForAnimation) { 
+                    stroke(getThemeColor('gk-stroke-color')); 
+                    strokeWeight(3);
+                    noFill();
+                    ellipse(this.x, this.y, this.radius * 2 + 6, this.radius * 2 + 6); 
+                } else if (this.isGK) { 
+                     stroke(getThemeColor('gk-stroke-color')); 
+                    strokeWeight(3);
+                    noFill();
+                    ellipse(this.x, this.y, this.radius * 2 + 6, this.radius * 2 + 6); 
+                }
+                
+                fill(getThemeColor('text-color')); 
+                noStroke(); 
+                text(this.number, this.x, this.y);
+            }
+        }
+
+        class Ball extends Item {
+            // ... (Ball class remains the same)
+             constructor(x, y) {
+                super(x, y, BALL_RADIUS);
+            }
+
+            display() {
+                stroke(getThemeColor('ball-stroke'));
+                strokeWeight(1);
+                fill(getThemeColor('ball-fill'));
+                ellipse(this.x, this.y, this.radius * 2, this.radius * 2);
+
+                if (this.isSelectedForAnimation) {
+                    stroke(getThemeColor('gk-stroke-color')); 
+                    strokeWeight(3);
+                    noFill();
+                    ellipse(this.x, this.y, this.radius * 2 + 6, this.radius * 2 + 6); 
+                }
+            }
+        }
+
+        function drawFieldLines() {
+            // ... (drawFieldLines remains the same)
+            const lineColor = getThemeColor('field-line-color');
+            stroke(lineColor);
+            strokeWeight(2);
+
+            line(CANVAS_WIDTH / 2, 0, CANVAS_WIDTH / 2, CANVAS_HEIGHT);
+            noFill();
+            ellipse(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 90, 90);
+            fill(lineColor); // For center spot
+            ellipse(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 8, 8);
+            noFill(); 
+
+            rect(redPenaltyArea.x1, redPenaltyArea.y1, PA_WIDTH, PA_HEIGHT);
+            rect(bluePenaltyArea.x1, bluePenaltyArea.y1, PA_WIDTH, PA_HEIGHT);
+            
+            const GA_WIDTH = 27; const GA_HEIGHT = 140;
+            rect(0, (CANVAS_HEIGHT - GA_HEIGHT) / 2, GA_WIDTH, GA_HEIGHT);
+            rect(CANVAS_WIDTH - GA_WIDTH, (CANVAS_HEIGHT - GA_HEIGHT) / 2, GA_WIDTH, GA_HEIGHT);
+
+            strokeWeight(4); 
+            line(0, (CANVAS_HEIGHT - 90) / 2, 0, (CANVAS_HEIGHT + 90) / 2);
+            line(CANVAS_WIDTH, (CANVAS_HEIGHT - 90) / 2, CANVAS_WIDTH, (CANVAS_HEIGHT + 90) / 2);
+        }
+        
+        function animateItem(item) {
+            // ... (animateItem remains the same)
+            let dx = item.targetX - item.x;
+            let dy = item.targetY - item.y;
+            let d = dist(item.x, item.y, item.targetX, item.targetY);
+
+            if (d < item.speed) {
+                item.x = item.targetX;
+                item.y = item.targetY;
+                item.isAnimating = false;
+                if (item instanceof Player) { 
+                    updateAllGoalkeepers();
+                }
             } else {
-                drawingCanvas.style.pointerEvents = 'auto';
+                item.x += (dx / d) * item.speed;
+                item.y += (dy / d) * item.speed;
             }
         }
 
-        document.getElementById('dragModeButton').addEventListener('click', () => setDrawingMode('drag'));
-        document.getElementById('arrowModeButton').addEventListener('click', () => setDrawingMode('arrow'));
-        document.getElementById('paintModeButton').addEventListener('click', () => setDrawingMode('paint'));
-        
-        document.getElementById('clearDrawingButton').addEventListener('click', () => {
-            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-        });
-
-        // --- Canvas Event Handlers ---
-        function getMousePos(canvas, evt) {
-            const rect = canvas.getBoundingClientRect();
-            return {
-                x: evt.clientX - rect.left,
-                y: evt.clientY - rect.top
-            };
-        }
-
-        drawingCanvas.addEventListener('mousedown', (e) => {
-            if (currentDrawingMode === 'drag') return;
-            isDrawing = true;
-            const pos = getMousePos(drawingCanvas, e);
-            [lastX, lastY] = [pos.x, pos.y];
-
-            if (currentDrawingMode === 'arrow') {
-                [arrowStartX, arrowStartY] = [pos.x, pos.y];
-            } else if (currentDrawingMode === 'paint') {
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
+        function mousePressed() {
+            // ... (mousePressed remains mostly the same, ensure it respects currentLanguage if needed for future text interactions)
+            if (mouseX < 0 || mouseX > CANVAS_WIDTH || mouseY < 0 || mouseY > CANVAS_HEIGHT) {
+                return; 
             }
-        });
 
-        drawingCanvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing || currentDrawingMode === 'drag') return;
-            const pos = getMousePos(drawingCanvas, e);
-
-            if (currentDrawingMode === 'paint') {
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-                [lastX, lastY] = [pos.x, pos.y];
-            } else if (currentDrawingMode === 'arrow') {
-                // Arrow preview could be implemented here
-            }
-        });
-
-        drawingCanvas.addEventListener('mouseup', (e) => {
-            if (!isDrawing || currentDrawingMode === 'drag') return;
-            if (currentDrawingMode === 'arrow') {
-                const pos = getMousePos(drawingCanvas, e);
-                drawArrow(ctx, arrowStartX, arrowStartY, pos.x, pos.y);
-            }
-            isDrawing = false;
-        });
-        
-        drawingCanvas.addEventListener('mouseout', () => { 
-             if (isDrawing && currentDrawingMode === 'paint') { 
-                isDrawing = false;
-            }
-        });
-
-        function drawArrow(context, fromX, fromY, toX, toY) {
-            const headLength = 10; 
-            const dx = toX - fromX;
-            const dy = toY - fromY;
-            if (dx === 0 && dy === 0) return; 
-            const angle = Math.atan2(dy, dx);
-            context.beginPath(); 
-            context.moveTo(fromX, fromY);
-            context.lineTo(toX, toY);
-            context.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
-            context.moveTo(toX, toY); 
-            context.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
-            context.stroke(); 
-        }
-
-        // --- Player and Ball Logic ---
-        function createPlayer(id, team, initialX, initialY, number) {
-            const playerEl = document.createElement('div');
-            playerEl.classList.add('player', team);
-            playerEl.id = id;
-            playerEl.textContent = number;
-            playerEl.style.left = `${initialX}px`;
-            playerEl.style.top = `${initialY}px`;
-            field.appendChild(playerEl);
-            const playerData = { id, team, x: initialX, y: initialY, el: playerEl, isGK: false };
-            playersData.push(playerData);
-            makeDraggable(playerData, PLAYER_SIZE, true);
-            return playerData;
-        }
-
-        function createBall() {
-            const ballEl = document.getElementById('ball');
-            const initialX = fieldRect.width / 2 - BALL_SIZE / 2;
-            const initialY = fieldRect.height / 2 - BALL_SIZE / 2;
-            ballEl.style.left = `${initialX}px`;
-            ballEl.style.top = `${initialY}px`;
-            ballData = { el: ballEl, x: initialX, y: initialY };
-            makeDraggable(ballData, BALL_SIZE, false);
-        }
-
-        function makeDraggable(itemData, itemSize, isPlayer) {
-            const itemEl = itemData.el;
-            let offsetX, offsetY;
-            itemEl.addEventListener('mousedown', (e) => {
-                if (currentDrawingMode !== 'drag') return; 
-                e.preventDefault();
-                itemEl.classList.add('dragging');
-                fieldRect = field.getBoundingClientRect(); 
-                offsetX = e.clientX - itemEl.getBoundingClientRect().left;
-                offsetY = e.clientY - itemEl.getBoundingClientRect().top;
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-            });
-            function onMouseMove(e) {
-                let newX = e.clientX - fieldRect.left - offsetX;
-                let newY = e.clientY - fieldRect.top - offsetY;
-                newX = Math.max(0, Math.min(newX, fieldRect.width - itemSize));
-                newY = Math.max(0, Math.min(newY, fieldRect.height - itemSize));
-                itemEl.style.left = `${newX}px`;
-                itemEl.style.top = `${newY}px`;
-                itemData.x = newX;
-                itemData.y = newY;
-            }
-            function onMouseUp() {
-                itemEl.classList.remove('dragging');
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-                if (isPlayer) {
-                    updateAllGoalkeepers(); 
+            if (currentMode === 'drag') {
+                draggedItem = null; 
+                for (let i = players.length - 1; i >= 0; i--) { 
+                    if (players[i].isMouseOver()) {
+                        draggedItem = players[i];
+                        break;
+                    }
                 }
+                if (!draggedItem && ball.isMouseOver()) {
+                    draggedItem = ball;
+                }
+            } else if (currentMode === 'animate') {
+                let clickedOnItem = false;
+                players.forEach(p => {
+                    if (p.isMouseOver()) {
+                        if (itemToAnimate) itemToAnimate.isSelectedForAnimation = false; 
+                        itemToAnimate = p;
+                        p.isSelectedForAnimation = true;
+                        clickedOnItem = true;
+                    }
+                });
+                if (!clickedOnItem && ball.isMouseOver()) { 
+                     if (itemToAnimate) itemToAnimate.isSelectedForAnimation = false;
+                     itemToAnimate = ball;
+                     ball.isSelectedForAnimation = true;
+                     clickedOnItem = true;
+                }
+
+                if (!clickedOnItem && itemToAnimate) {
+                    itemToAnimate.targetX = mouseX;
+                    itemToAnimate.targetY = mouseY;
+                    itemToAnimate.isAnimating = true;
+                }
+            } else if (currentMode === 'arrow') {
+                arrowStartPos = { x: mouseX, y: mouseY };
+            } else if (currentMode === 'paint') {
+                currentPaintPath = [{ x: mouseX, y: mouseY }];
+                allPaintPaths.push(currentPaintPath); 
             }
+        }
+
+        function mouseDragged() {
+            // ... (mouseDragged remains the same)
+             if (mouseX < 0 || mouseX > CANVAS_WIDTH || mouseY < 0 || mouseY > CANVAS_HEIGHT) {
+                if(draggedItem && currentMode === 'drag') mouseReleased(); 
+                return; 
+            }
+            if (currentMode === 'drag' && draggedItem) {
+                draggedItem.x = constrain(mouseX, draggedItem.radius, CANVAS_WIDTH - draggedItem.radius);
+                draggedItem.y = constrain(mouseY, draggedItem.radius, CANVAS_HEIGHT - draggedItem.radius);
+            } else if (currentMode === 'paint' && mouseIsPressed) { 
+                currentPaintPath.push({ x: mouseX, y: mouseY });
+            }
+        }
+
+        function mouseReleased() {
+            // ... (mouseReleased remains the same)
+            if (currentMode === 'drag' && draggedItem) {
+                if (draggedItem instanceof Player) {
+                    updateAllGoalkeepers();
+                }
+                draggedItem = null;
+            } else if (currentMode === 'arrow' && arrowStartPos) {
+                if (dist(arrowStartPos.x, arrowStartPos.y, mouseX, mouseY) > 5) { 
+                    drawnArrows.push({ fromX: arrowStartPos.x, fromY: arrowStartPos.y, toX: mouseX, toY: mouseY });
+                }
+                arrowStartPos = null;
+            }
+        }
+
+        function drawArrow(fromX, fromY, toX, toY) {
+            // ... (drawArrow remains the same)
+            let headLength = 10;
+            let angle = atan2(toY - fromY, toX - fromX);
+            line(fromX, fromY, toX, toY);
+            push(); 
+            translate(toX, toY);
+            rotate(angle);
+            line(0, 0, -headLength, -headLength / 2);
+            line(0, 0, -headLength, headLength / 2);
+            pop(); 
         }
 
         function isPlayerInArea(player, areaRect) {
-            const playerCenterX = player.x + PLAYER_SIZE / 2;
-            const playerCenterY = player.y + PLAYER_SIZE / 2;
-            return playerCenterX >= areaRect.x1 && playerCenterX <= areaRect.x2 &&
-                   playerCenterY >= areaRect.y1 && playerCenterY <= areaRect.y2;
+            // ... (isPlayerInArea remains the same)
+            return player.x >= areaRect.x1 && player.x <= areaRect.x2 &&
+                   player.y >= areaRect.y1 && player.y <= areaRect.y2;
         }
 
         function updateTeamGoalkeeper(teamColor, penaltyArea) {
-            const teamPlayers = playersData.filter(p => p.team === teamColor);
+            // ... (updateTeamGoalkeeper remains the same)
+            const teamPlayers = players.filter(p => p.team === teamColor);
             const playersInPA = teamPlayers.filter(p => isPlayerInArea(p, penaltyArea));
+            
             let previousGK = teamPlayers.find(p => p.isGK);
-            teamPlayers.forEach(p => p.isGK = false);
+            teamPlayers.forEach(p => p.isGK = false); 
+
             if (playersInPA.length === 1) {
                 playersInPA[0].isGK = true;
             } else if (playersInPA.length > 1) {
                 if (previousGK && playersInPA.includes(previousGK)) {
                     previousGK.isGK = true; 
                 } else {
-                    // Select a new GK randomly from players in PA
-                    const randomIndex = Math.floor(Math.random() * playersInPA.length);
+                    const randomIndex = floor(random(playersInPA.length));
                     playersInPA[randomIndex].isGK = true;
                 }
             }
-            teamPlayers.forEach(p => updatePlayerStyle(p));
         }
         
         function updateAllGoalkeepers() {
-            fieldRect = field.getBoundingClientRect(); 
-            redPenaltyAreaRect.y1 = (fieldRect.height - 308) / 2;
-            redPenaltyAreaRect.y2 = (fieldRect.height - 308) / 2 + 308;
-            bluePenaltyAreaRect.x1 = fieldRect.width - 81;
-            bluePenaltyAreaRect.x2 = fieldRect.width;
-            bluePenaltyAreaRect.y1 = (fieldRect.height - 308) / 2;
-            bluePenaltyAreaRect.y2 = (fieldRect.height - 308) / 2 + 308;
-            updateTeamGoalkeeper('red', redPenaltyAreaRect);
-            updateTeamGoalkeeper('blue', bluePenaltyAreaRect);
-        }
-
-        function updatePlayerStyle(playerData) {
-            playerData.el.classList.remove('goalkeeper');
-            if (playerData.isGK) {
-                playerData.el.classList.add('goalkeeper');
-            }
-        }
-
-        function initializePlayers() {
-            // Red Team (Left side) - 2-2 formation for outfield players
-            createPlayer('r1', 'red', 50, fieldRect.height / 2 - PLAYER_SIZE / 2, 1); // GK
-            createPlayer('r2', 'red', 120, fieldRect.height / 3 - PLAYER_SIZE / 2, 2); // Left Defender
-            createPlayer('r3', 'red', 120, fieldRect.height * 2 / 3 - PLAYER_SIZE / 2, 3); // Right Defender
-            createPlayer('r4', 'red', 200, fieldRect.height / 3 + (PLAYER_SIZE / 4), 4); // Left Forward
-            createPlayer('r5', 'red', 200, fieldRect.height * 2 / 3 - (PLAYER_SIZE / 4), 5); // Right Forward
-
-            // Blue Team (Right side) - Mirrored 2-2 formation
-            createPlayer('b1', 'blue', fieldRect.width - 50 - PLAYER_SIZE, fieldRect.height / 2 - PLAYER_SIZE / 2, 1); // GK
-            createPlayer('b2', 'blue', fieldRect.width - 120 - PLAYER_SIZE, fieldRect.height / 3 - PLAYER_SIZE / 2, 2); // Right Defender
-            createPlayer('b3', 'blue', fieldRect.width - 120 - PLAYER_SIZE, fieldRect.height * 2 / 3 - PLAYER_SIZE / 2, 3); // Left Defender
-            createPlayer('b4', 'blue', fieldRect.width - 200 - PLAYER_SIZE, fieldRect.height / 3 + (PLAYER_SIZE / 4), 4); // Right Forward
-            createPlayer('b5', 'blue', fieldRect.width - 200 - PLAYER_SIZE, fieldRect.height * 2 / 3 - (PLAYER_SIZE / 4), 5); // Left Forward
-            
-            updateAllGoalkeepers();
-        }
-
-        // --- Dark Mode ---
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        darkModeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('soccerThemePref', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            setupDrawingCanvas(); 
-        });
-
-        // --- Initialization ---
-        function initApp() {
-            if (localStorage.getItem('soccerThemePref') === 'dark') {
-                document.body.classList.add('dark-mode');
-            }
-            setupDrawingCanvas(); 
-            initializePlayers();
-            createBall();
-            setDrawingMode('drag'); 
+            // ... (updateAllGoalkeepers remains the same)
+            updateTeamGoalkeeper('red', redPenaltyArea);
+            updateTeamGoalkeeper('blue', bluePenaltyArea);
         }
         
-        window.addEventListener('resize', () => {
-            setupDrawingCanvas(); 
-            updateAllGoalkeepers(); 
+        function updateUIText() {
+            const texts = langData[currentLanguage];
+            document.title = texts.title;
+            document.documentElement.lang = currentLanguage; // Update html lang attribute
+
+            // Update button texts
+            document.getElementById('darkModeToggle').textContent = texts.darkModeToggle;
+            document.getElementById('dragModeButton').textContent = texts.dragModeButton;
+            document.getElementById('arrowModeButton').textContent = texts.arrowModeButton;
+            document.getElementById('paintModeButton').textContent = texts.paintModeButton;
+            document.getElementById('animateModeButton').textContent = texts.animateModeButton;
+            document.getElementById('clearDrawingButton').textContent = texts.clearDrawingButton;
+
+            // Update instructions
+            document.getElementById('instructionsTitle').innerHTML = texts.instructionsTitle;
+            document.getElementById('instructionsDragMode').innerHTML = texts.instructionsDragMode;
+            document.getElementById('instructionsArrowMode').innerHTML = texts.instructionsArrowMode;
+            document.getElementById('instructionsPaintMode').innerHTML = texts.instructionsPaintMode;
+            document.getElementById('instructionsAnimateModeTitle').innerHTML = texts.instructionsAnimateModeTitle;
+            document.getElementById('instructionsAnimateStep1').innerHTML = texts.instructionsAnimateStep1;
+            document.getElementById('instructionsAnimateStep2').innerHTML = texts.instructionsAnimateStep2;
+            document.getElementById('instructionsClearDrawing').innerHTML = texts.instructionsClearDrawing;
+            document.getElementById('instructionsGKHighlight').innerHTML = texts.instructionsGKHighlight;
+            document.getElementById('instructionsGKLogic').innerHTML = texts.instructionsGKLogic;
+        }
+
+
+        // --- UI Button Controls ---
+        const modeButtons = document.querySelectorAll('.mode-button');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const clearDrawingButton = document.getElementById('clearDrawingButton');
+        const languageToggleButton = document.getElementById('languageToggle');
+
+        function updateModeButtons() {
+            modeButtons.forEach(btn => {
+                if (btn.id === `${currentMode}ModeButton`) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        modeButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const newMode = e.target.id.replace('ModeButton', '');
+                if (newMode !== currentMode) {
+                    currentMode = newMode;
+                    if (itemToAnimate) {
+                        itemToAnimate.isSelectedForAnimation = false;
+                        itemToAnimate = null;
+                    }
+                    draggedItem = null; 
+                    arrowStartPos = null; 
+                    currentPaintPath = []; 
+                    updateModeButtons();
+                }
+            });
         });
 
-        initApp();
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('soccerThemePref_p5', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        });
+
+        clearDrawingButton.addEventListener('click', () => {
+            drawnArrows = [];
+            allPaintPaths = [];
+            currentPaintPath = [];
+        });
+
+        languageToggleButton.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'en' ? 'ja' : 'en';
+            localStorage.setItem('soccerLangPref_p5', currentLanguage);
+            updateUIText();
+        });
+        
+        // Load theme preference
+        if (localStorage.getItem('soccerThemePref_p5') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+
     </script>
 </body>
 </html>

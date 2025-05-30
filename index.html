@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5v5 サッカーフォーメーション</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .soccer-field {
+            position: relative;
+            width: 700px;
+            height: 450px;
+            background-color: #4CAF50; /* 標準的な緑のフィールド */
+            border: 2px solid #FFF;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            overflow: hidden; /* プレイヤーがフィールド外に出ないように */
+        }
+        /* フィールドの線 */
+        .line { position: absolute; background-color: #FFF; opacity: 0.7; }
+        .center-line { width: 2px; height: 100%; left: 50%; top: 0; transform: translateX(-50%); }
+        .center-circle { width: 90px; height: 90px; border: 2px solid #FFF; opacity: 0.7; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        .center-spot { width: 5px; height: 5px; background-color: #FFF; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        
+        .penalty-area {
+            position: absolute;
+            width: 81px; /* フィールド高さの18% */
+            height: 308px; /* フィールド幅の44% */
+            border: 2px solid #FFF;
+            opacity: 0.7;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .penalty-area.left { left: 0; }
+        .penalty-area.right { right: 0; }
+
+        .goal-area {
+            position: absolute;
+            width: 27px; /* フィールド高さの6% */
+            height: 140px; /* フィールド幅の20% */
+            border: 2px solid #FFF;
+            opacity: 0.7;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .goal-area.left { left: 0; }
+        .goal-area.right { right: 0; }
+
+        .goal {
+            position: absolute;
+            width: 10px; /* ゴールの深さ */
+            height: 90px; /* ゴールの幅 (PA幅の約30%) */
+            background-color: #DDD; /* ゴールネットの色 */
+            border: 2px solid #AAA;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0; /* プレイヤーより後ろ */
+        }
+        .goal.left { left: -10px; } /* フィールド枠の外側に少し出す */
+        .goal.right { right: -10px; }
+
+
+        .player {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: grab;
+            user-select: none;
+            border: 2px solid rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        .player.dragging {
+            cursor: grabbing;
+            z-index: 100;
+            opacity: 0.8;
+        }
+
+        /* チームカラー */
+        .player.red { background-color: #EF4444; /* Tailwind red-500 */ }
+        .player.blue { background-color: #3B82F6; /* Tailwind blue-500 */ }
+
+        /* ゴールキーパーのスタイル */
+        .player.red.goalkeeper {
+            background-color: #DC2626; /* Tailwind red-700 */
+            border: 3px solid #FDE047; /* Tailwind yellow-300 */
+            box-shadow: 0 0 10px #FDE047;
+        }
+        .player.blue.goalkeeper {
+            background-color: #1D4ED8; /* Tailwind blue-700 */
+            border: 3px solid #FDE047; /* Tailwind yellow-300 */
+            box-shadow: 0 0 10px #FDE047;
+        }
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: left;
+            max-width: 700px;
+        }
+        .instructions h3 {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .instructions p, .instructions ul {
+            font-size: 0.9em;
+            color: #555;
+            line-height: 1.6;
+        }
+        .instructions ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex flex-col items-center">
+        <div class="soccer-field" id="soccerField">
+            <div class="line center-line"></div>
+            <div class="line center-circle"></div>
+            <div class="line center-spot"></div>
+            <div class="penalty-area left" id="redPenaltyArea"></div>
+            <div class="penalty-area right" id="bluePenaltyArea"></div>
+            <div class="goal-area left"></div>
+            <div class="goal-area right"></div>
+            <div class="goal left"></div>
+            <div class="goal right"></div>
+            </div>
+        <div class="instructions">
+            <h3>操作方法とルール</h3>
+            <p>各プレイヤー（円）をマウスでドラッグして、フィールド上の好きな位置に配置できます。</p>
+            <ul>
+                <li><strong>ゴールキーパー (GK):</strong> 黄色い枠で強調表示されているプレイヤーがGKです。</li>
+                <li>自陣ペナルティエリア（ゴール前の長方形エリア）内に味方プレイヤーが1人だけいる場合、そのプレイヤーがGKになります。</li>
+                <li>GKがペナルティエリアから出るとGKではなくなります。</li>
+                <li>ペナルティエリア内に味方プレイヤーが複数いる場合、その中の1人のみがGKとして扱われます。</li>
+                <li>現在のGKがペナルティエリアから出て、エリア内に他の味方プレイヤーが残っている場合、残っているプレイヤーの中からランダムに1人が新しいGKになります。</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const field = document.getElementById('soccerField');
+        const fieldRect = field.getBoundingClientRect();
+
+        const PLAYER_SIZE = 28;
+        const playersData = []; // { id, team, x, y, el, isGK }
+
+        // ペナルティエリアの定義 (フィールドに対する相対座標)
+        const redPenaltyAreaRect = { // 左側 (チーム赤の守備エリア)
+            x1: 0,
+            y1: (fieldRect.height - 308) / 2, // 308 is PA height
+            x2: 81, // PA depth
+            y2: (fieldRect.height - 308) / 2 + 308
+        };
+        const bluePenaltyAreaRect = { // 右側 (チーム青の守備エリア)
+            x1: fieldRect.width - 81,
+            y1: (fieldRect.height - 308) / 2,
+            x2: fieldRect.width,
+            y2: (fieldRect.height - 308) / 2 + 308
+        };
+
+        function createPlayer(id, team, initialX, initialY, number) {
+            const playerEl = document.createElement('div');
+            playerEl.classList.add('player', team);
+            playerEl.id = id;
+            playerEl.textContent = number; // 背番号表示
+            playerEl.style.left = `${initialX}px`;
+            playerEl.style.top = `${initialY}px`;
+            field.appendChild(playerEl);
+
+            const playerData = { 
+                id, 
+                team, 
+                x: initialX, 
+                y: initialY, 
+                el: playerEl, 
+                isGK: false 
+            };
+            playersData.push(playerData);
+
+            makeDraggable(playerData);
+            return playerData;
+        }
+
+        function makeDraggable(playerData) {
+            const playerEl = playerData.el;
+            let offsetX, offsetY;
+
+            playerEl.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                playerEl.classList.add('dragging');
+                offsetX = e.clientX - playerEl.getBoundingClientRect().left;
+                offsetY = e.clientY - playerEl.getBoundingClientRect().top;
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                let newX = e.clientX - fieldRect.left - offsetX;
+                let newY = e.clientY - fieldRect.top - offsetY;
+
+                // フィールド境界内に制限
+                newX = Math.max(0, Math.min(newX, fieldRect.width - PLAYER_SIZE));
+                newY = Math.max(0, Math.min(newY, fieldRect.height - PLAYER_SIZE));
+
+                playerEl.style.left = `${newX}px`;
+                playerEl.style.top = `${newY}px`;
+                playerData.x = newX;
+                playerData.y = newY;
+            }
+
+            function onMouseUp() {
+                playerEl.classList.remove('dragging');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                updateAllGoalkeepers(); // 位置変更後にGKロジックを更新
+            }
+        }
+
+        function isPlayerInArea(player, areaRect) {
+            const playerCenterX = player.x + PLAYER_SIZE / 2;
+            const playerCenterY = player.y + PLAYER_SIZE / 2;
+            return playerCenterX >= areaRect.x1 && playerCenterX <= areaRect.x2 &&
+                   playerCenterY >= areaRect.y1 && playerCenterY <= areaRect.y2;
+        }
+
+        function updateTeamGoalkeeper(teamColor, penaltyArea) {
+            const teamPlayers = playersData.filter(p => p.team === teamColor);
+            const playersInPA = teamPlayers.filter(p => isPlayerInArea(p, penaltyArea));
+            
+            let previousGK = teamPlayers.find(p => p.isGK);
+
+            // まず全員のGKステータスをリセット
+            teamPlayers.forEach(p => p.isGK = false);
+
+            if (playersInPA.length === 1) {
+                playersInPA[0].isGK = true;
+            } else if (playersInPA.length > 1) {
+                if (previousGK && playersInPA.includes(previousGK)) {
+                    previousGK.isGK = true; // 既存GKがPA内にいれば維持
+                } else {
+                    // ランダムに一人をGKに選出
+                    const randomIndex = Math.floor(Math.random() * playersInPA.length);
+                    playersInPA[randomIndex].isGK = true;
+                }
+            }
+            // スタイル更新
+            teamPlayers.forEach(p => updatePlayerStyle(p));
+        }
+
+        function updateAllGoalkeepers() {
+            updateTeamGoalkeeper('red', redPenaltyAreaRect);
+            updateTeamGoalkeeper('blue', bluePenaltyAreaRect);
+        }
+
+        function updatePlayerStyle(playerData) {
+            playerData.el.classList.remove('goalkeeper'); // 一旦GKスタイルを削除
+            if (playerData.isGK) {
+                playerData.el.classList.add('goalkeeper');
+            }
+        }
+
+        // 初期プレイヤー配置
+        function initializePlayers() {
+            // 赤チーム (左側) - 例: 1-2-1 フォーメーション
+            createPlayer('r1', 'red', 50, fieldRect.height / 2 - PLAYER_SIZE / 2, 1); // GK候補
+            createPlayer('r2', 'red', 150, fieldRect.height / 4 - PLAYER_SIZE / 2, 2);
+            createPlayer('r3', 'red', 150, fieldRect.height * 3 / 4 - PLAYER_SIZE / 2, 3);
+            createPlayer('r4', 'red', 250, fieldRect.height / 2 - PLAYER_SIZE / 2, 4);
+            createPlayer('r5', 'red', 200, fieldRect.height / 2 - 70, 5);
+
+
+            // 青チーム (右側) - 例: 1-2-1 フォーメーション
+            createPlayer('b1', 'blue', fieldRect.width - 50 - PLAYER_SIZE, fieldRect.height / 2 - PLAYER_SIZE / 2, 1); // GK候補
+            createPlayer('b2', 'blue', fieldRect.width - 150 - PLAYER_SIZE, fieldRect.height / 4 - PLAYER_SIZE / 2, 2);
+            createPlayer('b3', 'blue', fieldRect.width - 150 - PLAYER_SIZE, fieldRect.height * 3 / 4 - PLAYER_SIZE / 2, 3);
+            createPlayer('b4', 'blue', fieldRect.width - 250 - PLAYER_SIZE, fieldRect.height / 2 - PLAYER_SIZE / 2, 4);
+            createPlayer('b5', 'blue', fieldRect.width - 200 - PLAYER_SIZE, fieldRect.height / 2 + 40, 5);
+            
+            updateAllGoalkeepers(); // 初期GK状態を設定
+        }
+
+        // アプリケーション初期化
+        initializePlayers();
+
+    </script>
+</body>
+</html>

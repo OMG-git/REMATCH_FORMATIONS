@@ -8,7 +8,7 @@
     <style>
         :root {
             --body-bg: #f0f4f8;
-            --text-color: #1f2937; /* Tailwind gray-800 */
+            --text-color: #1f2937;
             --instructions-bg: white;
             --instructions-text-color: #555;
             --instructions-heading-color: #333;
@@ -21,41 +21,44 @@
             --player-blue-bg: #3B82F6;
             --player-red-gk-bg: #DC2626;
             --player-blue-gk-bg: #1D4ED8;
-            --gk-border-color: #FDE047; /* Tailwind yellow-300 */
+            --gk-border-color: #FDE047;
             --ball-bg: #FFFFFF;
             --ball-border: #000000;
-            --button-bg: #e5e7eb; /* Tailwind gray-200 */
-            --button-text: #1f2937; /* Tailwind gray-800 */
-            --button-hover-bg: #d1d5db; /* Tailwind gray-300 */
+            --button-bg: #e5e7eb;
+            --button-text: #1f2937;
+            --button-hover-bg: #d1d5db;
+            --button-active-bg: #9ca3af; /* Tailwind gray-400 */
+            --drawing-color: #000000;
         }
 
         body.dark-mode {
-            --body-bg: #111827; /* Tailwind gray-900 */
-            --text-color: #f3f4f6; /* Tailwind gray-100 */
-            --instructions-bg: #1f2937; /* Tailwind gray-800 */
-            --instructions-text-color: #d1d5db; /* Tailwind gray-300 */
-            --instructions-heading-color: #e5e7eb; /* Tailwind gray-200 */
-            --field-bg: #388E3C; /* 暗めの緑 */
-            --field-border-color: #4b5563; /* Tailwind gray-600 */
-            --line-color: #9ca3af; /* Tailwind gray-400 */
-            --goal-bg: #4b5563; /* Tailwind gray-600 */
-            --goal-border: #6b7280; /* Tailwind gray-500 */
-            --player-red-bg: #B91C1C; /* Tailwind red-700 */
-            --player-blue-bg: #1E40AF; /* Tailwind blue-700 */
-            --player-red-gk-bg: #991B1B; /* Tailwind red-800 */
-            --player-blue-gk-bg: #1E3A8A; /* Tailwind blue-800 */
-            /* --gk-border-color は変更なしでも目立つ */
-            --ball-bg: #e5e7eb; /* Tailwind gray-200 */
-            --ball-border: #9ca3af; /* Tailwind gray-400 */
-            --button-bg: #374151; /* Tailwind gray-700 */
-            --button-text: #f3f4f6; /* Tailwind gray-100 */
-            --button-hover-bg: #4b5563; /* Tailwind gray-600 */
+            --body-bg: #111827;
+            --text-color: #f3f4f6;
+            --instructions-bg: #1f2937;
+            --instructions-text-color: #d1d5db;
+            --instructions-heading-color: #e5e7eb;
+            --field-bg: #388E3C;
+            --field-border-color: #4b5563;
+            --line-color: #9ca3af;
+            --goal-bg: #4b5563;
+            --goal-border: #6b7280;
+            --player-red-bg: #B91C1C;
+            --player-blue-bg: #1E40AF;
+            --player-red-gk-bg: #991B1B;
+            --player-blue-gk-bg: #1E3A8A;
+            --ball-bg: #e5e7eb;
+            --ball-border: #9ca3af;
+            --button-bg: #374151;
+            --button-text: #f3f4f6;
+            --button-hover-bg: #4b5563;
+            --button-active-bg: #6b7280; /* Tailwind gray-500 */
+            --drawing-color: #FFFFFF;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             display: flex;
-            flex-direction: column; /* 縦並びにする */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -77,164 +80,63 @@
             overflow: hidden;
             transition: background-color 0.3s, border-color 0.3s;
         }
-        .line { 
-            position: absolute; 
-            background-color: var(--line-color); 
-            opacity: 0.7; 
-            transition: background-color 0.3s;
+        .drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%; /* JS sets pixel size */
+            height: 100%; /* JS sets pixel size */
+            z-index: 4; /* Below ball (5) and players (10) */
+            /* pointer-events will be toggled by JS */
         }
+        .line { position: absolute; background-color: var(--line-color); opacity: 0.7; transition: background-color 0.3s; }
         .center-line { width: 2px; height: 100%; left: 50%; top: 0; transform: translateX(-50%); }
         .center-circle { width: 90px; height: 90px; border: 2px solid var(--line-color); opacity: 0.7; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); transition: border-color 0.3s;}
         .center-spot { width: 5px; height: 5px; background-color: var(--line-color); border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); transition: background-color 0.3s;}
         
-        .penalty-area {
-            position: absolute;
-            width: 81px; 
-            height: 308px; 
-            border: 2px solid var(--line-color);
-            opacity: 0.7;
-            top: 50%;
-            transform: translateY(-50%);
-            transition: border-color 0.3s;
-        }
+        .penalty-area { position: absolute; width: 81px; height: 308px; border: 2px solid var(--line-color); opacity: 0.7; top: 50%; transform: translateY(-50%); transition: border-color 0.3s; }
         .penalty-area.left { left: 0; }
         .penalty-area.right { right: 0; }
 
-        .goal-area {
-            position: absolute;
-            width: 27px; 
-            height: 140px; 
-            border: 2px solid var(--line-color);
-            opacity: 0.7;
-            top: 50%;
-            transform: translateY(-50%);
-            transition: border-color 0.3s;
-        }
+        .goal-area { position: absolute; width: 27px; height: 140px; border: 2px solid var(--line-color); opacity: 0.7; top: 50%; transform: translateY(-50%); transition: border-color 0.3s; }
         .goal-area.left { left: 0; }
         .goal-area.right { right: 0; }
 
-        .goal {
-            position: absolute;
-            width: 10px; 
-            height: 90px; 
-            background-color: var(--goal-bg); 
-            border: 2px solid var(--goal-border);
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 0;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
+        .goal { position: absolute; width: 10px; height: 90px; background-color: var(--goal-bg); border: 2px solid var(--goal-border); top: 50%; transform: translateY(-50%); z-index: 0; transition: background-color 0.3s, border-color 0.3s; }
         .goal.left { left: -10px; } 
         .goal.right { right: -10px; }
 
-        .player {
-            position: absolute;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            cursor: grab;
-            user-select: none;
-            border: 2px solid rgba(0,0,0,0.2);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            z-index: 10;
-            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-        }
-        .player.dragging {
-            cursor: grabbing;
-            z-index: 100;
-            opacity: 0.8;
-        }
-
+        .player { position: absolute; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 12px; cursor: grab; user-select: none; border: 2px solid rgba(0,0,0,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+        .player.dragging { cursor: grabbing; z-index: 100; opacity: 0.8; }
         .player.red { background-color: var(--player-red-bg); }
         .player.blue { background-color: var(--player-blue-bg); }
+        .player.red.goalkeeper { background-color: var(--player-red-gk-bg); border: 3px solid var(--gk-border-color); box-shadow: 0 0 10px var(--gk-border-color); }
+        .player.blue.goalkeeper { background-color: var(--player-blue-gk-bg); border: 3px solid var(--gk-border-color); box-shadow: 0 0 10px var(--gk-border-color); }
 
-        .player.red.goalkeeper {
-            background-color: var(--player-red-gk-bg);
-            border: 3px solid var(--gk-border-color);
-            box-shadow: 0 0 10px var(--gk-border-color);
-        }
-        .player.blue.goalkeeper {
-            background-color: var(--player-blue-gk-bg);
-            border: 3px solid var(--gk-border-color);
-            box-shadow: 0 0 10px var(--gk-border-color);
-        }
+        .ball { position: absolute; width: 22px; height: 22px; background-color: var(--ball-bg); border: 2px solid var(--ball-border); border-radius: 50%; cursor: grab; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: background-color 0.3s, border-color 0.3s; }
+        .ball.dragging { cursor: grabbing; z-index: 99; opacity: 0.8; }
 
-        .ball {
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background-color: var(--ball-bg);
-            border: 2px solid var(--ball-border);
-            border-radius: 50%;
-            cursor: grab;
-            z-index: 5; /* プレイヤーより手前だが、ドラッグ中のプレイヤーよりは奥 */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        .ball.dragging {
-            cursor: grabbing;
-            z-index: 99; /* ドラッグ中のプレイヤーよりは奥 */
-            opacity: 0.8;
-        }
-
-        .controls {
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-
-        #darkModeToggle {
-            padding: 8px 16px;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.2s;
-        }
-        #darkModeToggle:hover {
-            background-color: var(--button-hover-bg);
-        }
-
-        .instructions {
-            margin-top: 10px; /* 少しマージン調整 */
-            padding: 15px;
-            background-color: var(--instructions-bg);
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: left;
-            max-width: 700px;
-            transition: background-color 0.3s;
-        }
-        .instructions h3 {
-            font-size: 1.2em;
-            color: var(--instructions-heading-color);
-            margin-bottom: 10px;
-            transition: color 0.3s;
-        }
-        .instructions p, .instructions ul {
-            font-size: 0.9em;
-            color: var(--instructions-text-color);
-            line-height: 1.6;
-            transition: color 0.3s;
-        }
-        .instructions ul {
-            list-style-type: disc;
-            padding-left: 20px;
-        }
+        .controls { margin-top: 15px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .controls button { padding: 8px 12px; background-color: var(--button-bg); color: var(--button-text); border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: background-color 0.2s; }
+        .controls button:hover { background-color: var(--button-hover-bg); }
+        .controls button.active { background-color: var(--button-active-bg); font-weight: bold; }
+        
+        .instructions { margin-top: 10px; padding: 15px; background-color: var(--instructions-bg); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: left; max-width: 700px; transition: background-color 0.3s; }
+        .instructions h3 { font-size: 1.2em; color: var(--instructions-heading-color); margin-bottom: 10px; transition: color 0.3s; }
+        .instructions p, .instructions ul { font-size: 0.9em; color: var(--instructions-text-color); line-height: 1.6; transition: color 0.3s; }
+        .instructions ul { list-style-type: disc; padding-left: 20px; }
     </style>
 </head>
 <body>
     <div class="controls">
-        <button id="darkModeToggle">ライト/ダーク モード切替</button>
+        <button id="darkModeToggle">ライト/ダーク</button>
+        <button id="dragModeButton" class="drawing-mode-button">ドラッグ</button>
+        <button id="arrowModeButton" class="drawing-mode-button">矢印</button>
+        <button id="paintModeButton" class="drawing-mode-button">ペイント</button>
+        <button id="clearDrawingButton">クリア描画</button>
     </div>
     <div class="soccer-field" id="soccerField">
+        <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
         <div class="line center-line"></div>
         <div class="line center-circle"></div>
         <div class="line center-spot"></div>
@@ -248,10 +150,11 @@
         </div>
     <div class="instructions">
         <h3>操作方法とルール</h3>
-        <p>各プレイヤー（円）とボール（白い円）をマウスでドラッグして、フィールド上の好きな位置に配置できます。</p>
+        <p>各プレイヤー（円）とボール（白い円）をマウスでドラッグして、フィールド上の好きな位置に配置できます。「ドラッグ」モードを選択してください。</p>
+        <p>「矢印」または「ペイント」モードを選択すると、フィールドに書き込みができます。「クリア描画」で書き込みを消せます。</p>
         <ul>
             <li><strong>ゴールキーパー (GK):</strong> 黄色い枠で強調表示されているプレイヤーがGKです。</li>
-            <li>自陣ペナルティエリア（ゴール前の長方形エリア）内に味方プレイヤーが1人だけいる場合、そのプレイヤーがGKになります。</li>
+            <li>自陣ペナルティエリア内に味方プレイヤーが1人だけいる場合、そのプレイヤーがGKになります。</li>
             <li>GKがペナルティエリアから出るとGKではなくなります。</li>
             <li>ペナルティエリア内に味方プレイヤーが複数いる場合、その中の1人のみがGKとして扱われます。</li>
             <li>現在のGKがペナルティエリアから出て、エリア内に他の味方プレイヤーが残っている場合、残っているプレイヤーの中からランダムに1人が新しいGKになります。</li>
@@ -260,22 +163,132 @@
 
     <script>
         const field = document.getElementById('soccerField');
-        let fieldRect = field.getBoundingClientRect(); // letに変更してリサイズ対応できるようにする
+        let fieldRect = field.getBoundingClientRect();
 
         const PLAYER_SIZE = 28;
         const BALL_SIZE = 22;
         const playersData = []; 
-        let ballData = {}; // ボールデータ
+        let ballData = {};
 
-        const redPenaltyAreaRect = {
-            x1: 0, y1: (fieldRect.height - 308) / 2,
-            x2: 81, y2: (fieldRect.height - 308) / 2 + 308
-        };
-        const bluePenaltyAreaRect = {
-            x1: fieldRect.width - 81, y1: (fieldRect.height - 308) / 2,
-            x2: fieldRect.width, y2: (fieldRect.height - 308) / 2 + 308
-        };
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const ctx = drawingCanvas.getContext('2d');
+        let currentDrawingMode = 'drag'; // 'drag', 'arrow', 'paint'
+        let isDrawing = false;
+        let lastX, lastY; // For paint mode
+        let arrowStartX, arrowStartY; // For arrow mode
 
+        const redPenaltyAreaRect = { x1: 0, y1: (fieldRect.height - 308) / 2, x2: 81, y2: (fieldRect.height - 308) / 2 + 308 };
+        const bluePenaltyAreaRect = { x1: fieldRect.width - 81, y1: (fieldRect.height - 308) / 2, x2: fieldRect.width, y2: (fieldRect.height - 308) / 2 + 308 };
+
+        // --- Canvas Setup ---
+        function setupDrawingCanvas() {
+            fieldRect = field.getBoundingClientRect(); 
+            drawingCanvas.width = fieldRect.width;
+            drawingCanvas.height = fieldRect.height;
+            
+            const isDark = document.body.classList.contains('dark-mode');
+            ctx.strokeStyle = isDark ? getComputedStyle(document.documentElement).getPropertyValue('--drawing-color').trim() : '#000000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        // --- Drawing Mode Logic ---
+        const drawingModeButtons = document.querySelectorAll('.drawing-mode-button');
+        
+        function setDrawingMode(mode) {
+            currentDrawingMode = mode;
+            isDrawing = false; 
+
+            drawingModeButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.id === `${mode}ModeButton`) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (mode === 'drag') {
+                drawingCanvas.style.pointerEvents = 'none';
+            } else {
+                drawingCanvas.style.pointerEvents = 'auto';
+            }
+        }
+
+        document.getElementById('dragModeButton').addEventListener('click', () => setDrawingMode('drag'));
+        document.getElementById('arrowModeButton').addEventListener('click', () => setDrawingMode('arrow'));
+        document.getElementById('paintModeButton').addEventListener('click', () => setDrawingMode('paint'));
+        
+        document.getElementById('clearDrawingButton').addEventListener('click', () => {
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+        });
+
+        // --- Canvas Event Handlers ---
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+
+        drawingCanvas.addEventListener('mousedown', (e) => {
+            if (currentDrawingMode === 'drag') return;
+            isDrawing = true;
+            const pos = getMousePos(drawingCanvas, e);
+            [lastX, lastY] = [pos.x, pos.y];
+
+            if (currentDrawingMode === 'arrow') {
+                [arrowStartX, arrowStartY] = [pos.x, pos.y];
+            } else if (currentDrawingMode === 'paint') {
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+            }
+        });
+
+        drawingCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing || currentDrawingMode === 'drag') return;
+            const pos = getMousePos(drawingCanvas, e);
+
+            if (currentDrawingMode === 'paint') {
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                [lastX, lastY] = [pos.x, pos.y];
+            } else if (currentDrawingMode === 'arrow') {
+                // Arrow preview could be implemented here
+            }
+        });
+
+        drawingCanvas.addEventListener('mouseup', (e) => {
+            if (!isDrawing || currentDrawingMode === 'drag') return;
+            if (currentDrawingMode === 'arrow') {
+                const pos = getMousePos(drawingCanvas, e);
+                drawArrow(ctx, arrowStartX, arrowStartY, pos.x, pos.y);
+            }
+            isDrawing = false;
+        });
+        
+        drawingCanvas.addEventListener('mouseout', () => { 
+             if (isDrawing && currentDrawingMode === 'paint') { 
+                isDrawing = false;
+            }
+        });
+
+        function drawArrow(context, fromX, fromY, toX, toY) {
+            const headLength = 10; 
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            if (dx === 0 && dy === 0) return; 
+            const angle = Math.atan2(dy, dx);
+            context.beginPath(); 
+            context.moveTo(fromX, fromY);
+            context.lineTo(toX, toY);
+            context.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+            context.moveTo(toX, toY); 
+            context.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+            context.stroke(); 
+        }
+
+        // --- Player and Ball Logic ---
         function createPlayer(id, team, initialX, initialY, number) {
             const playerEl = document.createElement('div');
             playerEl.classList.add('player', team);
@@ -284,10 +297,9 @@
             playerEl.style.left = `${initialX}px`;
             playerEl.style.top = `${initialY}px`;
             field.appendChild(playerEl);
-
             const playerData = { id, team, x: initialX, y: initialY, el: playerEl, isGK: false };
             playersData.push(playerData);
-            makeDraggable(playerData, PLAYER_SIZE, true); // 最後の引数はisPlayer
+            makeDraggable(playerData, PLAYER_SIZE, true);
             return playerData;
         }
 
@@ -297,40 +309,33 @@
             const initialY = fieldRect.height / 2 - BALL_SIZE / 2;
             ballEl.style.left = `${initialX}px`;
             ballEl.style.top = `${initialY}px`;
-            
             ballData = { el: ballEl, x: initialX, y: initialY };
-            makeDraggable(ballData, BALL_SIZE, false); // isPlayer = false
+            makeDraggable(ballData, BALL_SIZE, false);
         }
 
         function makeDraggable(itemData, itemSize, isPlayer) {
             const itemEl = itemData.el;
             let offsetX, offsetY;
-
             itemEl.addEventListener('mousedown', (e) => {
+                if (currentDrawingMode !== 'drag') return; 
                 e.preventDefault();
                 itemEl.classList.add('dragging');
-                // fieldRectを最新の状態に更新 (ウィンドウリサイズ対応)
                 fieldRect = field.getBoundingClientRect(); 
                 offsetX = e.clientX - itemEl.getBoundingClientRect().left;
                 offsetY = e.clientY - itemEl.getBoundingClientRect().top;
-
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
             });
-
             function onMouseMove(e) {
                 let newX = e.clientX - fieldRect.left - offsetX;
                 let newY = e.clientY - fieldRect.top - offsetY;
-
                 newX = Math.max(0, Math.min(newX, fieldRect.width - itemSize));
                 newY = Math.max(0, Math.min(newY, fieldRect.height - itemSize));
-
                 itemEl.style.left = `${newX}px`;
                 itemEl.style.top = `${newY}px`;
                 itemData.x = newX;
                 itemData.y = newY;
             }
-
             function onMouseUp() {
                 itemEl.classList.remove('dragging');
                 document.removeEventListener('mousemove', onMouseMove);
@@ -351,33 +356,30 @@
         function updateTeamGoalkeeper(teamColor, penaltyArea) {
             const teamPlayers = playersData.filter(p => p.team === teamColor);
             const playersInPA = teamPlayers.filter(p => isPlayerInArea(p, penaltyArea));
-            
             let previousGK = teamPlayers.find(p => p.isGK);
             teamPlayers.forEach(p => p.isGK = false);
-
             if (playersInPA.length === 1) {
                 playersInPA[0].isGK = true;
             } else if (playersInPA.length > 1) {
                 if (previousGK && playersInPA.includes(previousGK)) {
                     previousGK.isGK = true; 
                 } else {
+                    // Select a new GK randomly from players in PA
                     const randomIndex = Math.floor(Math.random() * playersInPA.length);
                     playersInPA[randomIndex].isGK = true;
                 }
             }
             teamPlayers.forEach(p => updatePlayerStyle(p));
         }
-
+        
         function updateAllGoalkeepers() {
-            // ペナルティエリアの座標もウィンドウリサイズを考慮して更新
+            fieldRect = field.getBoundingClientRect(); 
             redPenaltyAreaRect.y1 = (fieldRect.height - 308) / 2;
             redPenaltyAreaRect.y2 = (fieldRect.height - 308) / 2 + 308;
+            bluePenaltyAreaRect.x1 = fieldRect.width - 81;
+            bluePenaltyAreaRect.x2 = fieldRect.width;
             bluePenaltyAreaRect.y1 = (fieldRect.height - 308) / 2;
             bluePenaltyAreaRect.y2 = (fieldRect.height - 308) / 2 + 308;
-            bluePenaltyAreaRect.x1 = fieldRect.width - 81; // x座標も更新
-            bluePenaltyAreaRect.x2 = fieldRect.width;
-
-
             updateTeamGoalkeeper('red', redPenaltyAreaRect);
             updateTeamGoalkeeper('blue', bluePenaltyAreaRect);
         }
@@ -390,56 +392,48 @@
         }
 
         function initializePlayers() {
-            // 赤チーム (左側)
-            createPlayer('r1', 'red', 50, fieldRect.height / 2 - PLAYER_SIZE / 2, 1);
-            createPlayer('r2', 'red', 150, fieldRect.height / 4 - PLAYER_SIZE / 2, 2);
-            createPlayer('r3', 'red', 150, fieldRect.height * 3 / 4 - PLAYER_SIZE / 2, 3);
-            createPlayer('r4', 'red', 250, fieldRect.height / 2 - PLAYER_SIZE / 2, 4);
-            createPlayer('r5', 'red', 200, fieldRect.height / 2 - 70, 5);
+            // Red Team (Left side) - 2-2 formation for outfield players
+            createPlayer('r1', 'red', 50, fieldRect.height / 2 - PLAYER_SIZE / 2, 1); // GK
+            createPlayer('r2', 'red', 120, fieldRect.height / 3 - PLAYER_SIZE / 2, 2); // Left Defender
+            createPlayer('r3', 'red', 120, fieldRect.height * 2 / 3 - PLAYER_SIZE / 2, 3); // Right Defender
+            createPlayer('r4', 'red', 200, fieldRect.height / 3 + (PLAYER_SIZE / 4), 4); // Left Forward
+            createPlayer('r5', 'red', 200, fieldRect.height * 2 / 3 - (PLAYER_SIZE / 4), 5); // Right Forward
 
-            // 青チーム (右側)
-            createPlayer('b1', 'blue', fieldRect.width - 50 - PLAYER_SIZE, fieldRect.height / 2 - PLAYER_SIZE / 2, 1);
-            createPlayer('b2', 'blue', fieldRect.width - 150 - PLAYER_SIZE, fieldRect.height / 4 - PLAYER_SIZE / 2, 2);
-            createPlayer('b3', 'blue', fieldRect.width - 150 - PLAYER_SIZE, fieldRect.height * 3 / 4 - PLAYER_SIZE / 2, 3);
-            createPlayer('b4', 'blue', fieldRect.width - 250 - PLAYER_SIZE, fieldRect.height / 2 - PLAYER_SIZE / 2, 4);
-            createPlayer('b5', 'blue', fieldRect.width - 200 - PLAYER_SIZE, fieldRect.height / 2 + 40, 5);
+            // Blue Team (Right side) - Mirrored 2-2 formation
+            createPlayer('b1', 'blue', fieldRect.width - 50 - PLAYER_SIZE, fieldRect.height / 2 - PLAYER_SIZE / 2, 1); // GK
+            createPlayer('b2', 'blue', fieldRect.width - 120 - PLAYER_SIZE, fieldRect.height / 3 - PLAYER_SIZE / 2, 2); // Right Defender
+            createPlayer('b3', 'blue', fieldRect.width - 120 - PLAYER_SIZE, fieldRect.height * 2 / 3 - PLAYER_SIZE / 2, 3); // Left Defender
+            createPlayer('b4', 'blue', fieldRect.width - 200 - PLAYER_SIZE, fieldRect.height / 3 + (PLAYER_SIZE / 4), 4); // Right Forward
+            createPlayer('b5', 'blue', fieldRect.width - 200 - PLAYER_SIZE, fieldRect.height * 2 / 3 - (PLAYER_SIZE / 4), 5); // Left Forward
             
             updateAllGoalkeepers();
         }
 
-        // ダークモード切替
+        // --- Dark Mode ---
         const darkModeToggle = document.getElementById('darkModeToggle');
         darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
-            // ローカルストレージに設定を保存 (オプション)
-            if (document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('soccerThemePref', 'dark');
-            } else {
-                localStorage.setItem('soccerThemePref', 'light');
-            }
+            localStorage.setItem('soccerThemePref', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            setupDrawingCanvas(); 
         });
 
-        // 初期化
+        // --- Initialization ---
         function initApp() {
-            // 保存されたテーマ設定を読み込む (オプション)
             if (localStorage.getItem('soccerThemePref') === 'dark') {
                 document.body.classList.add('dark-mode');
             }
-            
+            setupDrawingCanvas(); 
             initializePlayers();
-            createBall(); // ボールを作成・配置
+            createBall();
+            setDrawingMode('drag'); 
         }
         
-        // ウィンドウリサイズ時にフィールドと要素の相対位置を再計算
         window.addEventListener('resize', () => {
-            fieldRect = field.getBoundingClientRect();
-            // 必要であれば、ここでプレイヤーやボールの位置も再計算して調整する
-            // (現在はドラッグ時に最新のfieldRectを使うので、静止時はそのままでも可)
-            updateAllGoalkeepers(); // PAエリアの座標が変わる可能性があるのでGK更新
+            setupDrawingCanvas(); 
+            updateAllGoalkeepers(); 
         });
 
         initApp();
-
     </script>
 </body>
 </html>

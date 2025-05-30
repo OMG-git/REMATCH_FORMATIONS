@@ -2,7 +2,7 @@
 <html lang="en"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REMATCH Formations (p5.js)</title> <script src="https://cdn.tailwindcss.com"></script>
+    <title>REMATCH Formation (p5.js)</title> <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
     <style>
         :root {
@@ -26,6 +26,8 @@
             --button-text: #1f2937;
             --button-hover-bg: #d1d5db;
             --button-active-bg: #9ca3af;
+            --credits-text-color: #6b7280; /* Tailwind gray-500 */
+            --link-color: #3b82f6; /* Tailwind blue-500 for links */
         }
 
         body.dark-mode {
@@ -48,6 +50,8 @@
             --button-text: #f3f4f6;
             --button-hover-bg: #4b5563;
             --button-active-bg: #6b7280;
+            --credits-text-color: #9ca3af; /* Tailwind gray-400 */
+            --link-color: #60a5fa; /* Lighter blue for dark mode links */
         }
 
         body {
@@ -86,12 +90,28 @@
         .instructions h3 { font-size: 1.2em; color: var(--instructions-heading-color); margin-bottom: 10px; transition: color 0.3s; }
         .instructions p, .instructions ul { font-size: 0.9em; color: var(--instructions-text-color); line-height: 1.6; transition: color 0.3s; }
         .instructions ul { list-style-type: disc; padding-left: 20px; }
+
+        .credits {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--credits-text-color);
+            transition: color 0.3s;
+        }
+        .credits a {
+            color: var(--link-color);
+            text-decoration: underline;
+        }
+        .credits a:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
     <div class="controls">
         <button id="languageToggle">EN/JA</button>
         <button id="darkModeToggle">Light/Dark</button>
+        <button id="resetPositionsButton">Reset Positions</button>
         <button id="dragModeButton" class="mode-button">Drag</button>
         <button id="arrowModeButton" class="mode-button">Arrow</button>
         <button id="paintModeButton" class="mode-button">Paint</button>
@@ -111,10 +131,14 @@
             <li id="instructionsAnimateStep2">Then, click a target location on the field to move the selected item.</li>
         </ol>
         <p id="instructionsClearDrawing">"Clear Drawings" will erase all arrows and paint.</p>
+        <p id="instructionsResetPositions">"Reset Positions" will return all players and the ball to their starting places.</p>
         <ul id="instructionsGKSection">
             <li id="instructionsGKHighlight"><strong>Goalkeeper (GK):</strong> Displayed in a special color (e.g., darker red for Red team).</li>
             <li id="instructionsGKLogic">GK rules apply as before (auto-determined by position in own penalty area).</li>
         </ul>
+    </div>
+    <div class="credits">
+        <p id="creditsText"></p>
     </div>
 
     <script>
@@ -128,7 +152,7 @@
         let ball;
         
         let currentMode = 'drag'; 
-        let currentLanguage = 'en'; // Default language
+        let currentLanguage = 'en'; 
         let draggedItem = null;
         let itemToAnimate = null;
 
@@ -144,8 +168,9 @@
 
         const langData = {
             en: {
-                title: "5v5 Soccer Formation (p5.js)",
+                title: "REMATCH Formation (p5.js)",
                 darkModeToggle: "Light/Dark",
+                resetPositionsButton: "Reset Positions",
                 dragModeButton: "Drag",
                 arrowModeButton: "Arrow",
                 paintModeButton: "Paint",
@@ -159,12 +184,15 @@
                 instructionsAnimateStep1: "Click a player or the ball to select it (highlighted yellow).",
                 instructionsAnimateStep2: "Then, click a target location on the field to move the selected item.",
                 instructionsClearDrawing: "\"Clear Drawings\" will erase all arrows and paint.",
+                instructionsResetPositions: "\"Reset Positions\" will return all players and the ball to their starting places.",
                 instructionsGKHighlight: "<strong>Goalkeeper (GK):</strong> Displayed in a special color (e.g., darker red for Red team).",
-                instructionsGKLogic: "GK rules apply as before (auto-determined by position in own penalty area)."
+                instructionsGKLogic: "GK rules apply as before (auto-determined by position in own penalty area).",
+                creditsText: `Created by <a href="https://x.com/OMG_a1" target="_blank" rel="noopener noreferrer">OMG</a>`
             },
             ja: {
-                title: "5v5 サッカーフォーメーション (p5.js)",
+                title: "REMATCH フォーメーション (p5.js)",
                 darkModeToggle: "ライト/ダーク",
+                resetPositionsButton: "初期位置に戻す",
                 dragModeButton: "ドラッグ",
                 arrowModeButton: "矢印",
                 paintModeButton: "ペイント",
@@ -178,13 +206,14 @@
                 instructionsAnimateStep1: "アニメーションさせたいプレイヤーかボールをクリックして選択します（黄色い枠で表示）。",
                 instructionsAnimateStep2: "次にフィールド上の目標地点をクリックすると、選択したアイテムがそこへ移動します。",
                 instructionsClearDrawing: "「クリア描画」で矢印やペイントを消せます。",
+                instructionsResetPositions: "「初期位置に戻す」で全てのプレイヤーとボールを開始位置に戻します。",
                 instructionsGKHighlight: "<strong>ゴールキーパー (GK):</strong> 特別な色で表示されます（例: 赤チームなら濃い赤）。",
-                instructionsGKLogic: "GKルールは従来通りです（自陣ペナルティエリア内の状況で自動的に決定）。"
+                instructionsGKLogic: "GKルールは従来通りです（自陣ペナルティエリア内の状況で自動的に決定）。",
+                creditsText: `作成者: <a href="https://x.com/OMG_a1" target="_blank" rel="noopener noreferrer">OMG</a>`
             }
         };
 
         function getThemeColor(baseNameForP5) {
-            // ... (previous getThemeColor function remains the same)
             const isDarkMode = document.body.classList.contains('dark-mode');
             const style = getComputedStyle(document.documentElement);
             let colorArray = null;
@@ -218,11 +247,10 @@
                 return colorArray;
             }
             
-            // Fallback colors if CSS variables are not found or invalid
             if (baseNameForP5.includes('line') || baseNameForP5.includes('stroke') || baseNameForP5.includes('border')) {
                 return isDarkMode ? [220, 220, 220] : [50, 50, 50]; 
-            } else if (baseNameForP5.includes('text')) {
-                return isDarkMode ? [230, 230, 230] : [20, 20, 20]; 
+            } else if (baseNameForP5.includes('text')) { // For text on players
+                return isDarkMode ? [20, 20, 20] : [255, 255, 255]; // Dark text on light players, Light text on dark players
             } else { 
                 if (baseNameForP5.includes('field-bg')) {
                     return isDarkMode ? [20, 20, 20] : [230, 230, 230]; 
@@ -237,12 +265,11 @@
             canvas.parent('canvasContainer');
             initializePlayersAndBall();
             
-            // Load language preference
             const savedLang = localStorage.getItem('soccerLangPref_p5');
             if (savedLang && langData[savedLang]) {
                 currentLanguage = savedLang;
             }
-            updateUIText(); // Apply loaded or default language
+            updateUIText(); 
             updateModeButtons();
 
             textAlign(CENTER, CENTER);
@@ -296,7 +323,6 @@
         }
 
         function initializePlayersAndBall() {
-            // ... (player and ball initialization remains the same)
             players = []; 
             // Red Team
             players.push(new Player('r1', 'red', 50, CANVAS_HEIGHT / 2, 1));
@@ -316,8 +342,9 @@
         }
         
         class Item {
-            // ... (Item class remains the same)
             constructor(x, y, radius) {
+                this.initialX = x; 
+                this.initialY = y; 
                 this.x = x;
                 this.y = y;
                 this.radius = radius;
@@ -331,10 +358,18 @@
             isMouseOver() {
                 return dist(mouseX, mouseY, this.x, this.y) < this.radius;
             }
+
+            resetPosition() {
+                this.x = this.initialX;
+                this.y = this.initialY;
+                this.targetX = this.initialX;
+                this.targetY = this.initialY;
+                this.isAnimating = false;
+                this.isSelectedForAnimation = false;
+            }
         }
 
         class Player extends Item {
-            // ... (Player class remains the same)
             constructor(id, team, x, y, number) {
                 super(x, y, PLAYER_RADIUS);
                 this.id = id;
@@ -365,14 +400,24 @@
                     ellipse(this.x, this.y, this.radius * 2 + 6, this.radius * 2 + 6); 
                 }
                 
-                fill(getThemeColor('text-color')); 
+                // Determine text color based on player's fill color brightness for better contrast
+                let playerFill = getThemeColor(fillColorName);
+                // Simple brightness check (sum of RGB / 3). Could be more sophisticated.
+                let brightness = (playerFill[0] + playerFill[1] + playerFill[2]) / 3;
+                let numberColor;
+                if (document.body.classList.contains('dark-mode')) {
+                    numberColor = brightness > 100 ? getThemeColor('text-color-p5-dark') : [240,240,240]; // Lighter text on darker players
+                } else {
+                     numberColor = brightness > 180 ? [20,20,20] : getThemeColor('text-color-p5'); // Darker text on lighter players
+                }
+
+                fill(numberColor); 
                 noStroke(); 
                 text(this.number, this.x, this.y);
             }
         }
 
         class Ball extends Item {
-            // ... (Ball class remains the same)
              constructor(x, y) {
                 super(x, y, BALL_RADIUS);
             }
@@ -393,7 +438,6 @@
         }
 
         function drawFieldLines() {
-            // ... (drawFieldLines remains the same)
             const lineColor = getThemeColor('field-line-color');
             stroke(lineColor);
             strokeWeight(2);
@@ -401,7 +445,7 @@
             line(CANVAS_WIDTH / 2, 0, CANVAS_WIDTH / 2, CANVAS_HEIGHT);
             noFill();
             ellipse(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 90, 90);
-            fill(lineColor); // For center spot
+            fill(lineColor); 
             ellipse(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 8, 8);
             noFill(); 
 
@@ -418,7 +462,6 @@
         }
         
         function animateItem(item) {
-            // ... (animateItem remains the same)
             let dx = item.targetX - item.x;
             let dy = item.targetY - item.y;
             let d = dist(item.x, item.y, item.targetX, item.targetY);
@@ -437,7 +480,6 @@
         }
 
         function mousePressed() {
-            // ... (mousePressed remains mostly the same, ensure it respects currentLanguage if needed for future text interactions)
             if (mouseX < 0 || mouseX > CANVAS_WIDTH || mouseY < 0 || mouseY > CANVAS_HEIGHT) {
                 return; 
             }
@@ -484,7 +526,6 @@
         }
 
         function mouseDragged() {
-            // ... (mouseDragged remains the same)
              if (mouseX < 0 || mouseX > CANVAS_WIDTH || mouseY < 0 || mouseY > CANVAS_HEIGHT) {
                 if(draggedItem && currentMode === 'drag') mouseReleased(); 
                 return; 
@@ -498,7 +539,6 @@
         }
 
         function mouseReleased() {
-            // ... (mouseReleased remains the same)
             if (currentMode === 'drag' && draggedItem) {
                 if (draggedItem instanceof Player) {
                     updateAllGoalkeepers();
@@ -513,7 +553,6 @@
         }
 
         function drawArrow(fromX, fromY, toX, toY) {
-            // ... (drawArrow remains the same)
             let headLength = 10;
             let angle = atan2(toY - fromY, toX - fromX);
             line(fromX, fromY, toX, toY);
@@ -526,13 +565,11 @@
         }
 
         function isPlayerInArea(player, areaRect) {
-            // ... (isPlayerInArea remains the same)
             return player.x >= areaRect.x1 && player.x <= areaRect.x2 &&
                    player.y >= areaRect.y1 && player.y <= areaRect.y2;
         }
 
         function updateTeamGoalkeeper(teamColor, penaltyArea) {
-            // ... (updateTeamGoalkeeper remains the same)
             const teamPlayers = players.filter(p => p.team === teamColor);
             const playersInPA = teamPlayers.filter(p => isPlayerInArea(p, penaltyArea));
             
@@ -552,7 +589,6 @@
         }
         
         function updateAllGoalkeepers() {
-            // ... (updateAllGoalkeepers remains the same)
             updateTeamGoalkeeper('red', redPenaltyArea);
             updateTeamGoalkeeper('blue', bluePenaltyArea);
         }
@@ -560,17 +596,16 @@
         function updateUIText() {
             const texts = langData[currentLanguage];
             document.title = texts.title;
-            document.documentElement.lang = currentLanguage; // Update html lang attribute
+            document.documentElement.lang = currentLanguage; 
 
-            // Update button texts
             document.getElementById('darkModeToggle').textContent = texts.darkModeToggle;
+            document.getElementById('resetPositionsButton').textContent = texts.resetPositionsButton;
             document.getElementById('dragModeButton').textContent = texts.dragModeButton;
             document.getElementById('arrowModeButton').textContent = texts.arrowModeButton;
             document.getElementById('paintModeButton').textContent = texts.paintModeButton;
             document.getElementById('animateModeButton').textContent = texts.animateModeButton;
             document.getElementById('clearDrawingButton').textContent = texts.clearDrawingButton;
 
-            // Update instructions
             document.getElementById('instructionsTitle').innerHTML = texts.instructionsTitle;
             document.getElementById('instructionsDragMode').innerHTML = texts.instructionsDragMode;
             document.getElementById('instructionsArrowMode').innerHTML = texts.instructionsArrowMode;
@@ -579,8 +614,20 @@
             document.getElementById('instructionsAnimateStep1').innerHTML = texts.instructionsAnimateStep1;
             document.getElementById('instructionsAnimateStep2').innerHTML = texts.instructionsAnimateStep2;
             document.getElementById('instructionsClearDrawing').innerHTML = texts.instructionsClearDrawing;
+            document.getElementById('instructionsResetPositions').innerHTML = texts.instructionsResetPositions;
             document.getElementById('instructionsGKHighlight').innerHTML = texts.instructionsGKHighlight;
             document.getElementById('instructionsGKLogic').innerHTML = texts.instructionsGKLogic;
+            document.getElementById('creditsText').innerHTML = texts.creditsText;
+        }
+
+        function resetAllPositions() {
+            players.forEach(player => player.resetPosition());
+            ball.resetPosition();
+            if (itemToAnimate) { 
+                itemToAnimate.isSelectedForAnimation = false;
+                itemToAnimate = null;
+            }
+            updateAllGoalkeepers();
         }
 
 
@@ -589,6 +636,7 @@
         const darkModeToggle = document.getElementById('darkModeToggle');
         const clearDrawingButton = document.getElementById('clearDrawingButton');
         const languageToggleButton = document.getElementById('languageToggle');
+        const resetPositionsButton = document.getElementById('resetPositionsButton'); 
 
         function updateModeButtons() {
             modeButtons.forEach(btn => {
@@ -633,8 +681,9 @@
             localStorage.setItem('soccerLangPref_p5', currentLanguage);
             updateUIText();
         });
+
+        resetPositionsButton.addEventListener('click', resetAllPositions); 
         
-        // Load theme preference
         if (localStorage.getItem('soccerThemePref_p5') === 'dark') {
             document.body.classList.add('dark-mode');
         }
